@@ -2,26 +2,29 @@
 # Usage: ./1-world_wide_web <domain> <subdomain>
 # Display information about subdomains.
 
-get_record_info() {
-  local domain="$1"
-  local subdomain="$2"
+domain_information () {
+    expected_ip=""
+    case "$2" in
+        "www") expected_ip="52.86.138.70" ;;
+        "lb-01") expected_ip="52.86.138.70" ;;
+        "web-01") expected_ip="52.204.165.231" ;;
+        "web-02") expected_ip="54.242.191.130" ;;
+        # Add more cases for other subdomains if needed
+    esac
 
-  local record_type=$(nslookup "$subdomain.$domain" | awk '/^Type:/ {print $2}')
-  local destination=$(nslookup "$subdomain.$domain" | awk '/^Address:/ {print $2}')
+    line=$(dig "$2"."$1" | grep -A1 'ANSWER SECTION:' | tr '\t' '\n' | tail -2 | tr '\n' ' ')
+    echo "$2 $line" | awk '{print "The subdomain " $1 " is a " $2 " record and points to " $3}'
 
-  echo "The subdomain $subdomain is a $record_type record and points to $destination"
+    if [ "$expected_ip" != "" ]; then
+        echo "Expected IP address for $2: $expected_ip"
+    fi
 }
 
-domain="$1"
-subdomain="$2"
-
-if [[ -z "$subdomain" ]]; then
-  # Display information for default subdomains
-  get_record_info "$domain" "www"
-  get_record_info "$domain" "lb-01"
-  get_record_info "$domain" "web-01"
-  get_record_info "$domain" "web-02"
-else
-  # Display information for the specified subdomain
-  get_record_info "$domain" "$subdomain"
+if [ "$#" == 1 ]; then
+  domain_information "$1" "www"
+  domain_information "$1" "lb-01"
+  domain_information "$1" "web-01"
+  domain_information "$1" "web-02"
+elif [ "$#" == 2 ]; then
+  domain_information "$1" "$2"
 fi
