@@ -5,10 +5,10 @@
 domain_information () {
     expected_ip=""
     case "$2" in
-        "www") expected_ip="52.86.138.70" ;;
-        "lb-01") expected_ip="52.86.138.70" ;;
-        "web-01") expected_ip="52.204.165.231" ;;
-        "web-02") expected_ip="54.242.191.130" ;;
+        "www") expected_ip="54.209.20.130" ;;
+        "lb-01") expected_ip="54.209.20.130" ;;
+        "web-01") expected_ip="54.86.179.224" ;;
+        "web-02") expected_ip="100.26.169.71" ;;
         # Add more cases for other subdomains if needed
     esac
 
