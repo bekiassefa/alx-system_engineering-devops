@@ -1,4 +1,35 @@
-#!/usr/bin/env bash
-# Gracefully reloads Gunicorni
+#!/bin/bash
 
-systemctl status gunicorn | grep -oE 'Main PID: [0-9]+' | cut -d ' ' -f3 | xargs kill -HUP
+# Stop one worker at a time and start a new one, ensuring no downtime
+
+# Get the process IDs (PIDs) of the existing Gunicorn workers
+pids=$(pgrep -f "gunicorn.*web_flask.0-hello_route:app")
+
+# Number of workers to maintain during the update
+num_workers=4
+
+# Path to your Gunicorn executable
+gunicorn_path="/home/vagrant/AirBnB_clone_v4/bin/gunicorn"
+
+# Gunicorn arguments
+gunicorn_args="--bind 0.0.0.0:8001 --workers $num_workers web_flask.0-hello_route:app"
+
+# Function to gracefully restart a worker
+graceful_restart_worker() {
+    local pid=$1
+    echo "Gracefully restarting worker $pid..."
+    kill -HUP "$pid"
+    sleep 2 # Give some time for the worker to finish processing requests
+}
+
+# Iterate through the PIDs and restart workers gracefully
+for pid in $pids; do
+    graceful_restart_worker "$pid"
+done
+
+# Start new workers to replace the old ones
+echo "Starting new workers..."
+"$gunicorn_path" $gunicorn_args &
+
+echo "Gunicorn workers reloaded successfully!"
+
